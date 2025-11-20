@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>¿Quién te tocó en el intercambio?</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f4f8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 3rem;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            color: #555;
+        }
+
+        .names-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .name-button {
+            padding: 0.8rem 1rem;
+            border-radius: 999px;
+            border: none;
+            background: #ffffff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s;
+        }
+
+        .name-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            background: #f8fafc;
+        }
+
+        .name-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 4rem;
+            z-index: 50;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .result-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 1.5rem 1.7rem;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            margin: 0 1rem;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            margin: 0 0 0.5rem;
+            color: #555;
+        }
+
+        .person-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0 0 1rem;
+        }
+
+        .likes-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .likes-list {
+            margin: 0;
+            padding-left: 1.2rem;
+        }
+
+        .likes-list li {
+            margin-bottom: 0.3rem;
+        }
+
+        .hint {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 1rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #020617;
+                color: #e5e7eb;
+            }
+            .name-button {
+                background: #020617;
+                color: #e5e7eb;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+            }
+            .name-button:hover {
+                background: #050816;
+            }
+            .result-card {
+                background: #020617;
+                box-shadow: 0 4px 18px rgba(0,0,0,0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>¿Quién te tocó en el intercambio?</h1>
+        <p class="subtitle">
+            Selecciona un nombre para ver sus gustos y tener ideas de regalo.
+        </p>
+
+        <!-- LISTADO DE NOMBRES -->
+        <div id="namesContainer" class="names-grid">
+            <!-- Aquí se generarán los botones dinámicamente -->
+        </div>
+    </div>
+
+    <!-- MODAL: RESULTADO -->
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <div id="resultCard" class="result-card">
+            <p class="result-title">Seleccionaste a:</p>
+            <p id="personName" class="person-name"></p>
+
+            <p class="likes-title">Le gustan:</p>
+            <ul id="likesList" class="likes-list"></ul>
+
+            <p class="hint">
+                Tip: puedes tomar foto a esta pantalla para recordar sus gustos al momento de comprar.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Participantes y sus gustos
+        const participantes = [
+            {
+                nombre: "Levis",
+                gustos: [
+                    "Figuras",
+                    "Animales vivos pequeños"
+                ]
+            },
+            {
+                nombre: "Natalia",
+                gustos: [
+                    "Cosas de chicas (maquillaje, accesorios, ropa)",
+                ]
+            },
+            {
+                nombre: "Evelyn",
+                gustos: [
+                    "Cosas de chicas (maquillaje, accesorios, ropa)",
+
+                ]
+            },
+            {
+                nombre: "Kevin",
+                gustos: [
+                    "Anime",
+                    "Música"
+                ]
+            },
+            {
+                nombre: "Beto",
+                gustos: [
+                    "Anime",
+                    "League of Leyends",
+                    "Harry Potter"
+                ]
+            },
+            {
+                nombre: "Lalo",
+                gustos: [
+                    "Anime",
+                    "Cómics",
+                    "Mangas",
+                    "Videojuegos"
+                ]
+            },
+            {
+                nombre: "Bryan",
+                gustos: []
+            },
+            {
+                nombre: "Emilyn (Novia de Bryan)",
+                gustos: [
+                    "Cosas de belleza"
+                ]
+            },
+            {
+                nombre: "Joaquisillo",
+                gustos: [
+                    "Tazas chidas, locas o diferentes a lo normal"
+                ]
+            },
+            {
+                nombre: "Abraham (El oso)",
+                gustos: [
+                    "Legos",
+                    "Libros (Alchemised - The knight and the moth)"
+                ]
+            },
+            {
+                nombre: "Etne",
+                gustos: [
+                    "Cosas para setup (escritorio)",
+                    "Anime (Haikyuu, JJK, One Piece)"
+                ]
+            },
+            {
+                nombre: "Novia de Etne",
+                gustos: [
+                    "Paleta de maquillaje de sombra de ojos",
+                    "Funda kiut iPhone 15"
+                ]
+            },
+            {
+                nombre: "Felipe",
+                gustos: [
+                    "Anime",
+                    "Termos",
+                    "Cosas para café",
+                    "Lentes de Sol",
+                    "Juegos de mesa o de cartas (Ya tengo muchos UNO)"
+                ]
+            },
+            {
+                nombre: "Ale (Novia de Felipe)",
+                gustos: [
+                    "BTS",
+                    "Juegos de mesa",
+                    "Maquillaje",
+                    "El café",
+                    "Accesorios de los k-dramas",
+                    "Accesorios para el gym",
+                    "Accesorios para moto"
+                ]
+            },
+            {
+                nombre: "Alan",
+                gustos: []
+            }
+        ];
+
+        const namesContainer = document.getElementById("namesContainer");
+        const modalOverlay = document.getElementById("modalOverlay");
+        const resultCard = document.getElementById("resultCard");
+        const personName = document.getElementById("personName");
+        const likesList = document.getElementById("likesList");
+
+        let nombreSeleccionado = null;
+
+        // Genera un botón por cada participante
+        participantes.forEach(participante => {
+            const btn = document.createElement("button");
+            btn.className = "name-button";
+            btn.textContent = participante.nombre;
+
+            btn.addEventListener("click", () => {
+                // Si se hace clic de nuevo sobre el mismo nombre y el modal está abierto, lo cerramos
+                if (nombreSeleccionado === participante.nombre && !modalOverlay.classList.contains("hidden")) {
+                    cerrarModal();
+                } else {
+                    mostrarGustos(participante);
+                }
+            });
+
+            namesContainer.appendChild(btn);
+        });
+
+        function mostrarGustos(persona) {
+            nombreSeleccionado = persona.nombre;
+            personName.textContent = persona.nombre;
+
+            // Limpiamos la lista anterior
+            likesList.innerHTML = "";
+
+            // Agregamos cada gusto como <li>
+            persona.gustos.forEach(gusto => {
+                const li = document.createElement("li");
+                li.textContent = gusto;
+                likesList.appendChild(li);
+            });
+
+            // Mostramos el modal
+            modalOverlay.classList.remove("hidden");
+        }
+
+        function cerrarModal() {
+            modalOverlay.classList.add("hidden");
+            nombreSeleccionado = null;
+        }
+
+        // Cerrar al hacer clic fuera del modal (en el overlay)
+        modalOverlay.addEventListener("click", (event) => {
+            if (event.target === modalOverlay) {
+                cerrarModal();
+            }
+        });
+
+        // Cerrar con la tecla ESC
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && !modalOverlay.classList.contains("hidden")) {
+                cerrarModal();
+            }
+        });
+    </script>
+</body>
+</html>
